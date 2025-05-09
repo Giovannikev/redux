@@ -6,11 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import ProductForm from '@/components/productForm';
 import ProductList from '@/components/productList';
+import ProductFilter from '@/components/productFilter';
 import type { RootState } from '@/lib/redux/store';
+
+interface ProductFormProps {
+  onClose: () => void;
+}
 
 export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const products = useSelector((state: RootState) => state.products.items);
+  const filters = useSelector((state: RootState) => state.products.filters);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-6">
@@ -31,8 +37,11 @@ export default function Home() {
 
       {isFormOpen && <ProductForm onClose={() => setIsFormOpen(false)} />}
 
-      <div className="mt-8">
-        <ProductList />
+      <div className="grid md:grid-cols-[250px_1fr] gap-6">
+        <ProductFilter />
+        <div>
+          <ProductList />
+        </div>
       </div>
     </div>
   );

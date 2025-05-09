@@ -13,12 +13,63 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Heart, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 export default function ProductList() {
   const dispatch = useDispatch();
   const products = useSelector((state: RootState) => state.products.items);
+  const filters = useSelector((state: RootState) => state.products.filters);
+
+  // Apply filters to products
+  const filteredProducts = products.filter((product) => {
+    // Ensure filters exist with default values if undefined
+    const searchTerm = filters?.search || '';
+    const filterStatus = filters?.status || 'all';
+    const filterLiked = filters?.liked;
+
+    // Filter by search term
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      false;
+
+    // Filter by status
+    const matchesStatus =
+      filterStatus === 'all'
+        ? true
+        : filterStatus === 'completed'
+        ? product.completed
+        : !product.completed;
+
+    // Filter by liked status
+    const matchesLiked =
+      filterLiked === null
+        ? true
+        : filterLiked === true
+        ? product.liked
+        : !product.liked;
+
+    return matchesSearch && matchesStatus && matchesLiked;
+  });
+
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (filters?.sortBy || 'newest') {
+      case 'newest':
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case 'oldest':
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      case 'name':
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
 
   if (products.length === 0) {
     return (
@@ -33,9 +84,24 @@ export default function ProductList() {
     );
   }
 
+  if (sortedProducts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-muted-foreground/20 rounded-lg">
+        <div className="text-center space-y-3">
+          <p className="text-muted-foreground text-lg">
+            Aucun produit ne correspond à vos filtres.
+          </p>
+          <p className="text-sm text-muted-foreground/70">
+            Essayez de modifier vos critères de recherche.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {products.map((product) => (
+      {sortedProducts.map((product) => (
         <Card
           key={product.id}
           className={`transition-all duration-300 hover:shadow-md ${
@@ -127,12 +193,10 @@ export default function ProductList() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() =>
-                dispatch(
-                  removeProduct(product.id),
-                  toast.info('Produit supprimé')
-                )
-              }
+              onClick={() => {
+                dispatch(removeProduct(product.id));
+                toast.info('Produit supprimé');
+              }}
               className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
             >
               <Trash2 className="h-5 w-5" />

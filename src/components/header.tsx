@@ -23,7 +23,7 @@ const Header = () => {
           >
             <HomeIcon className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-semibold">TodoList App</h1>
+          <h1 className="text-xl font-semibold">My Products</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button
